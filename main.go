@@ -36,20 +36,26 @@ func main() {
 
 	flag.Parse()
 
+	cacheDir := ".cache"
+
 	if clearCache {
 		fmt.Println("Clearing cache...")
 
+		if err := os.RemoveAll(cacheDir); err != nil {
+			fmt.Fprintf(os.Stderr, "Error clearing cache: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Println("Cache cleared successfully")
 		return
 	}
+	os.MkdirAll(cacheDir, 0755)
 
 	if port <= 0 || port > 65535 || origin == "" {
 		fmt.Fprintln(os.Stderr, "Error: Both --port (1-65535) and --origin are required to start the proxy.")
 		flag.Usage()
 		os.Exit(1)
 	}
-
-	cacheDir := ".cache"
-	os.MkdirAll(cacheDir, 0755)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		cacheFileName := getCacheKey(r.Method, r.URL.RequestURI())
